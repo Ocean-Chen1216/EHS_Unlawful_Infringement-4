@@ -386,9 +386,10 @@ function downloadReport() {
     
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([html], {type: "text/html"}));
-    a.download = `附件七查核報告_${document.getElementById('evalDate').value}.html`;
+    a.download = `不法侵害查核評估報告_${document.getElementById('evalDate').value}.html`;
     a.click();
 }
 </script>
 </body>
 </html>
+
