@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MK職場不法侵害預防評估表 v6.0 (客製讀取+自動分類)</title>
+<style>
+  body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: #f0f2f5; padding: 10px; margin: 0 auto; max-width: 800px; color: #333; }
+  .container { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+  .version-tag { text-align: right; font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+  .section { margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fff; }
+  .section h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 1.1rem; color: #0288d1; display: flex; justify-content: space-between; align-items: center;}
+  label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.95rem; }
+  select, input[type="text"], input[type="date"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; background: #fff; }
+  textarea { height: 60px; resize: vertical; }
+  .risk-row { padding: 20px 0; border-bottom: 5px solid #f0f2f5; }
+  .risk-id { background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; }
+  .mk-note { display: inline-block; font-size: 0.8rem; color: #0288d1; background: #e1f5fe; padding: 2px 6px; border-radius: 4px; margin-top: 5px; }
+  .toggle-area { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; background: #fafafa; padding: 10px; border-radius: 6px; }
+  .btn-toggle { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; background: white; }
+  .btn-toggle.active-yes { background: #e74c3c; color: white; border-color: #c0392b; }
+  .btn-toggle.active-no { background: #2ecc71; color: white; border-color: #27ae60; }
+  .detail-area { display: none; padding-left: 10px; border-left: 3px solid #e74c3c; }
+  .detail-area.show { display: block; animation: slideDown 0.3s; }
+  .violence-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 15px; background: #fff5f5; padding: 10px; border-radius: 6px; }
+  .v-option { display: flex; align-items: center; font-size: 0.9rem; cursor: pointer; }
+  .v-option input { width: auto; margin-right: 8px; margin-bottom: 0; }
+  .v-option.pre-checked { color: #d35400; font-weight: bold; }
+  .eval-box { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+  .eval-select { flex: 1; }
+  .risk-result { width: 80px; text-align: center; font-weight: bold; padding: 10px; border-radius: 6px; font-size: 0.9rem; background: #eee; }
+  .control-box { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd; }
+  .chip-container { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+  .chip { font-size: 0.8rem; background: #eee; padding: 5px 10px; border-radius: 15px; cursor: pointer; border: 1px solid #ddd; }
+  .new-control-area { display: none; background: #fff5f5; padding: 10px; border-radius: 6px; border: 1px solid #feb2b2; margin-top: 10px; }
+  .new-control-area.show { display: block; }
+  .error-border { border: 2px solid red !important; background-color: #fff0f0; }
+  .risk-low { color: #27ae60; background: #e8f8f5; }
+  .risk-mid { color: #e67e22; background: #fdebd0; }
+  .risk-high { color: #c0392b; background: #fadbd8; }
+  .btn-info { font-size: 0.8rem; background: #e1f5fe; color: #0288d1; border: none; padding: 5px 10px; border-radius: 15px; cursor: pointer; }
+  .modal { display: none; position: fixed; z-index: 99; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+  .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 85%; max-width: 500px; border-radius: 8px; }
+  .close { float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+  .btn-download { background: #27ae60; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 1rem; margin-top: 10px; cursor: pointer; }
+  .btn-email { background: #0288d1; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 1rem; margin-top: 10px; cursor: pointer; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div id="infoModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('infoModal').style.display='none'">&times;</span>
+    <h3>評分標準說明</h3>
+    <p><strong>可能性 (P)：</strong><br>1: 1 - 極少發生 (數年一次)<br>2: 2 - 可能發生 (一年數次)<br>3: 3 - 經常發生 (每週/月)</p>
+    <p><strong>嚴重性 (S)：</strong><br>1: 1 - 輕微 (口頭騷擾/無受傷)<br>2: 2 - 中度 (需醫療諮商/輕傷)<br>3: 3 - 嚴重 (住院/永久失能)</p>
+    <hr>
+    <p><strong>風險等級：</strong><br>🟢 1-2分：低度<br>🟠 3-4分：中度<br>🔴 6-9分：高度</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="version-tag">v6.0 (客製讀取+自動分類)</div>
+  <h2 style="text-align:center; color:#2c3e50;">職場不法侵害預防評估表</h2>
+  
+  <div class="section">
+    <h3>1. 基本資料</h3>
+    <label>姓名</label><input type="text" id="empName" placeholder="請輸入姓名">
+    <label>部門</label><select id="empDept"><option value="V1">V1</option>
+<option value="V2">V2</option>
+<option value="V3">V3</option>
+<option value="V5">V5</option>
+<option value="V6">V6</option>
+<option value="V7">V7</option>
+<option value="工務">工務</option>
+<option value="行銷">行銷</option>
+<option value="財會">財會</option>
+<option value="開發">開發</option>
+<option value="資訊">資訊</option>
+<option value="運籌">運籌</option>
+<option value="新事業">新事業</option>
+<option value="總管理">總管理</option></select>
+    <label>日期</label><input type="date" id="evalDate">
+  </div>
+
+  <div class="section">
+    <h3>2. 風險辨識 <button class="btn-info" onclick="document.getElementById('infoModal').style.display='block'">❓ 標準</button></h3>
+    <div id="riskList"></div>
+  </div>
+
+  <div class="section">
+    <h3>3. 簽名確認 <span style="color:red; font-size:0.8rem;">(必填)</span></h3>
+    <canvas id="sigCanvas" style="width:100%; height:150px; border:2px dashed #ccc;"></canvas>
+    <button onclick="clearSig()" style="margin-top:5px; background:#ccc; border:none; padding:5px; border-radius:4px;">清除重簽</button>
+  </div>
+
+  <button class="btn-download" onclick="generateReport()">1. 下載報告 (HTML)</button>
+  <button class="btn-email" onclick="sendEmail()">2. 寄給負責人</button>
+</div>
+
+<script>
+document.getElementById('evalDate').valueAsDate = new Date();
+const questions = [
+    {
+        "id": "E01",
+        "q": "是否有外部之人員(承包商、客戶、服務對象等)因其行為不可預知，可能造成職場暴力",
+        "note": "適用：總部接待、清潔外包、設備維修",
+        "types": "職場暴力、性騷擾"
+    },
+    {
+        "id": "E02",
+        "q": "是否有已知工作會接觸有暴力史之客戶",
+        "note": "一般適用",
+        "types": "職場暴力、跟蹤騷擾"
+    },
+    {
+        "id": "E03",
+        "q": "工作性質為執行公共安全業務 (依法維持公共秩序，保護公司安全，防止一切危害之業務)",
+        "note": "一般適用",
+        "types": "職場暴力"
+    },
+    {
+        "id": "E04",
+        "q": "工作是否為單獨作業",
+        "note": "重點適用：實驗室人員、樣品室加班人員",
+        "types": "職場暴力、性騷擾、跟蹤騷擾"
+    },
+    {
+        "id": "E05",
+        "q": "是否需於深夜或凌晨工作",
+        "note": "重點適用：配合南美/中亞工廠時差之視訊會議人員",
+        "types": "職場暴力、職場霸凌、性騷擾"
+    },
+    {
+        "id": "E06",
+        "q": "是否需於較陌生之環境工作",
+        "note": "適用：業務或需巡視海外工廠之主管",
+        "types": "職場暴力、性騷擾、跟蹤騷擾"
+    },
+    {
+        "id": "E07",
+        "q": "工作涉及現金交易、運送或處理貴重物品",
+        "note": "適用：樣品室(高價布料/樣衣)或財務部",
+        "types": "職場暴力"
+    },
+    {
+        "id": "E08",
+        "q": "工作是否為直接面對公眾之第一線服務工作",
+        "note": "適用：總機櫃檯(其餘部門風險較低)",
+        "types": "職場暴力、職場霸凌、性騷擾、跟蹤騷擾"
+    },
+    {
+        "id": "E09",
+        "q": "工作是否與酗酒、毒癮、情緒不穩之人接觸",
+        "note": "一般適用",
+        "types": "職場暴力、性騷擾"
+    },
+    {
+        "id": "E10",
+        "q": "工作是否需接觸絕望或恐懼或亟需被關懷照顧者",
+        "note": "一般適用",
+        "types": "職場暴力"
+    },
+    {
+        "id": "E11",
+        "q": "是否有自行通報因私人關係遭受不法侵害威脅者或為家庭暴力受害者",
+        "note": "適用：全員",
+        "types": "職場暴力、跟蹤騷擾"
+    },
+    {
+        "id": "E12",
+        "q": "新進勞工是否有尚未接受職場不法侵害預防教育訓練者",
+        "note": "適用：人資檢核項目",
+        "types": "職場暴力、職場霸凌、就業歧視、性騷擾、跟蹤騷擾"
+    },
+    {
+        "id": "E13",
+        "q": "工作場所位於交通不便，偏遠地區者",
+        "note": "一般適用",
+        "types": "職場暴力、性騷擾"
+    },
+    {
+        "id": "I01",
+        "q": "工作環境中是否有讓施暴者隱藏的地方",
+        "note": "適用：樣品室堆疊區、實驗室角落、停車場",
+        "types": "職場暴力、性騷擾、跟蹤騷擾"
+    },
+    {
+        "id": "I02",
+        "q": "離開工作場所後，是否可能遭遇因執行職務所致之不法侵害行為",
+        "note": "適用：業務人員或處理客訴者",
+        "types": "跟蹤騷擾、職場暴力"
+    },
+    {
+        "id": "I03",
+        "q": "單位內是否曾發生主管或員工遭受同事(含上司)不當言行之對待",
+        "note": "重點適用：含遠端會議言語暴力",
+        "types": "職場暴力、職場霸凌、性騷擾、就業歧視"
+    },
+    {
+        "id": "I04",
+        "q": "是否有因不同性別、年齡、國籍或宗教信仰受到職場暴力之單位內工作者",
+        "note": "適用：跨國企業文化、外派人員",
+        "types": "就業歧視、職場霸凌"
+    },
+    {
+        "id": "I05",
+        "q": "是否有單位內工作者之離職或請求調職原因源於職場暴力事件之發生",
+        "note": "一般適用",
+        "types": "職場暴力、職場霸凌、性騷擾"
+    },
+    {
+        "id": "I06",
+        "q": "單位內是否有被同事排擠之工作者",
+        "note": "一般適用",
+        "types": "職場霸凌、就業歧視"
+    },
+    {
+        "id": "I07",
+        "q": "單位內是否有酗酒、毒癮之工作者",
+        "note": "一般適用",
+        "types": "職場暴力、性騷擾"
+    },
+    {
+        "id": "I08",
+        "q": "單位內是否有情緒不穩定或是精神疾患病史者",
+        "note": "一般適用",
+        "types": "職場暴力、職場霸凌"
+    },
+    {
+        "id": "I09",
+        "q": "單位內是否有處於情緒低落、絕望或恐懼，亟需被關懷照顧者",
+        "note": "一般適用",
+        "types": "職場暴力"
+    },
+    {
+        "id": "I10",
+        "q": "單位內是否有超時工作，反應工作壓力大者",
+        "note": "重點適用：趕季節性訂單、跨時區工作者",
+        "types": "職場霸凌"
+    },
+    {
+        "id": "I11",
+        "q": "單位內工作環境是否有空間擁擠、照明設備不足之問題",
+        "note": "適用：樣品室動線、倉庫區",
+        "types": "職場暴力、性騷擾"
+    },
+    {
+        "id": "I12",
+        "q": "工作場所出入是否未有相關管制措施",
+        "note": "適用：辦公室門禁管理",
+        "types": "職場暴力、跟蹤騷擾"
+    }
+];
+const commonControls = ["門禁刷卡管制", "24H保全人員", "CCTV監視系統", "緊急通報按鈕", "員工申訴管道", "教育訓練", "雙人作業機制", "照明充足", "不法侵害預防公告"];
+const violenceList = ["職場暴力", "職場霸凌", "就業歧視", "性騷擾", "跟蹤騷擾"];
+const managerEmail = "oceanchen@makalot.com.tw";
+const defs = {
+    p: { 1: "1 - 極少發生 (數年一次)", 2: "2 - 可能發生 (一年數次)", 3: "3 - 經常發生 (每週/月)" },
+    s: { 1: "1 - 輕微 (口頭騷擾/無受傷)", 2: "2 - 中度 (需醫療諮商/輕傷)", 3: "3 - 嚴重 (住院/永久失能)" }
+};
+let hasSigned = false;
+
+// 渲染
+const list = document.getElementById('riskList');
+questions.forEach((item, idx) => {
+    let preSelected = [];
+    if(item.types) { preSelected = item.types.split(/[、,;]/).map(t => t.trim()); }
+
+    let vHtml = "";
+    violenceList.forEach(v => {
+        const isChecked = preSelected.includes(v);
+        const checkedStr = isChecked ? "checked" : "";
+        const clsStr = isChecked ? "v-option pre-checked" : "v-option";
+        vHtml += `<label class="${clsStr}"><input type="checkbox" name="v_type_${idx}" value="${v}" ${checkedStr}> ${v}</label>`;
+    });
+
+    let chipsHtml = "";
+    commonControls.forEach(c => {
+        chipsHtml += `<span class="chip" onclick="addControl(${idx}, '${c}')">${c}</span>`;
+    });
+
+    const div = document.createElement('div');
+    div.className = 'risk-row';
+    div.innerHTML = `
+        <div class="risk-header">
+            <span class="risk-id">${item.id}</span>
+            <strong>${item.q}</strong>
+            ${item.note ? `<div class="mk-note">${item.note}</div>` : ''}
+        </div>
+        
+        <label>是否適用 / 存在此風險？</label>
+        <div class="toggle-area" id="toggle_area_${idx}">
+             <div class="btn-toggle" id="btn_yes_${idx}" onclick="toggleApp(${idx}, true)">□ 是 (填寫細項)</div>
+             <div class="btn-toggle active-no" id="btn_no_${idx}" onclick="toggleApp(${idx}, false)">■ 否 (無風險)</div>
+        </div>
+        <input type="hidden" id="is_app_${idx}" value="false">
+
+        <div id="detail_${idx}" class="detail-area">
+            <label style="margin-top:10px;">1. 確認暴力類型 (可複選)：</label>
+            <div class="violence-grid" id="v_grid_${idx}">${vHtml}</div>
+
+            <div class="eval-box">
+                <div class="eval-select">
+                    <label style="font-size:0.8rem;margin-bottom:2px;">2. 可能性</label>
+                    <select id="prob_${idx}" onchange="calc(${idx})" style="margin:0;">
+                        <option value="1">${defs.p[1]}</option>
+                        <option value="2">${defs.p[2]}</option>
+                        <option value="3">${defs.p[3]}</option>
+                    </select>
+                    <div style="height:10px;"></div>
+                    <label style="font-size:0.8rem;margin-bottom:2px;">3. 嚴重性</label>
+                    <select id="sev_${idx}" onchange="calc(${idx})" style="margin:0;">
+                        <option value="1">${defs.s[1]}</option>
+                        <option value="2">${defs.s[2]}</option>
+                        <option value="3">${defs.s[3]}</option>
+                    </select>
+                </div>
+                <div id="res_${idx}" class="risk-result risk-low" data-score="1">1<br>低度</div>
+            </div>
+
+            <div class="control-box">
+                <label>4. 現有控制措施 (必填)：</label>
+                <div class="chip-container">${chipsHtml}</div>
+                <textarea id="exist_${idx}" placeholder="請描述現有防護..."></textarea>
+                <div id="new_box_${idx}" class="new-control-area">
+                    <label style="color:#c0392b;">⚠️ 5. 風險高，請填寫「新增改善對策」：</label>
+                    <textarea id="new_${idx}" placeholder="例如：加裝監視器..."></textarea>
+                </div>
+            </div>
+        </div>
+    `;
+    list.appendChild(div);
+});
+
+function toggleApp(idx, isYes) {
+    const detail = document.getElementById(`detail_${idx}`);
+    const val = document.getElementById(`is_app_${idx}`);
+    const btnYes = document.getElementById(`btn_yes_${idx}`);
+    const btnNo = document.getElementById(`btn_no_${idx}`);
+    if(isYes) {
+        detail.classList.add('show');
+        val.value = "true";
+        btnYes.className = "btn-toggle active-yes"; btnYes.innerText = "■ 是";
+        btnNo.className = "btn-toggle"; btnNo.innerText = "□ 否";
+    } else {
+        detail.classList.remove('show');
+        val.value = "false";
+        btnYes.className = "btn-toggle"; btnYes.innerText = "□ 是";
+        btnNo.className = "btn-toggle active-no"; btnNo.innerText = "■ 否";
+    }
+}
+
+function addControl(idx, text) {
+    const area = document.getElementById(`exist_${idx}`);
+    if(area.value.includes(text)) return;
+    area.value += (area.value ? "、" : "") + text;
+}
+
+function calc(idx) {
+    const p = parseInt(document.getElementById(`prob_${idx}`).value);
+    const s = parseInt(document.getElementById(`sev_${idx}`).value);
+    const score = p * s;
+    const resDiv = document.getElementById(`res_${idx}`);
+    const newBox = document.getElementById(`new_box_${idx}`);
+    let text = `${score}<br>低度`, cls = 'risk-low';
+    if(score >= 3) {
+        newBox.classList.add('show');
+        if(score >= 6) { text = `${score}<br>高度`; cls = 'risk-high'; }
+        else { text = `${score}<br>中度`; cls = 'risk-mid'; }
+    } else { newBox.classList.remove('show'); }
+    resDiv.className = `risk-result ${cls}`;
+    resDiv.innerHTML = text;
+    resDiv.setAttribute('data-score', score);
+}
+
+// 簽名板 (修正版)
+const canvas = document.getElementById("sigCanvas");
+const ctx = canvas.getContext("2d");
+function resize() { 
+    const ratio = Math.max(window.devicePixelRatio||1, 1);
+    canvas.width = canvas.offsetWidth*ratio; canvas.height = canvas.offsetHeight*ratio;
+    ctx.scale(ratio,ratio); 
+}
+window.addEventListener("resize", resize); setTimeout(resize, 500);
+
+let isDrawing = false;
+canvas.addEventListener('mousedown', start); 
+canvas.addEventListener('touchstart', start, {passive:false});
+canvas.addEventListener('mousemove', draw); 
+canvas.addEventListener('touchmove', draw, {passive:false});
+canvas.addEventListener('mouseup', stop); 
+canvas.addEventListener('mouseout', stop); // 防止滑鼠移出停不下來
+canvas.addEventListener('touchend', stop);
+
+function start(e) { 
+    if(e.target==canvas) e.preventDefault(); 
+    hasSigned=true; 
+    ctx.beginPath(); var p=pos(e); ctx.moveTo(p.x,p.y); 
+    isDrawing = true;
+}
+function draw(e) { 
+    if(!isDrawing) return; 
+    if(e.target==canvas) e.preventDefault(); 
+    var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); 
+}
+function stop() { isDrawing = false; }
+function pos(e) { var r=canvas.getBoundingClientRect(); var cx=e.touches?e.touches[0].clientX:e.clientX; var cy=e.touches?e.touches[0].clientY:e.clientY; return {x:cx-r.left,y:cy-r.top}; }
+function clearSig() { 
+    ctx.clearRect(0,0,canvas.width/window.devicePixelRatio,canvas.height/window.devicePixelRatio); 
+    hasSigned = false; 
+}
+
+function generateReport() {
+    const name = document.getElementById('empName').value;
+    if(!name) { alert("請輸入姓名"); return; }
+    
+    // 錯誤清除
+    document.querySelectorAll('.error-border').forEach(el => el.classList.remove('error-border'));
+    let hasError = false;
+
+    questions.forEach((q, i) => {
+        const isApp = document.getElementById(`is_app_${i}`).value === "true";
+        if(isApp) {
+            const checkedTypes = document.querySelectorAll(`input[name="v_type_${i}"]:checked`);
+            if(checkedTypes.length === 0) { hasError = true; document.getElementById(`v_grid_${i}`).classList.add('error-border'); }
+
+            const existVal = document.getElementById(`exist_${i}`).value.trim();
+            if(existVal === "") { hasError = true; document.getElementById(`exist_${i}`).classList.add('error-border'); }
+
+            const sc = document.getElementById(`res_${i}`).getAttribute('data-score');
+            if(parseInt(sc) >= 3) {
+                const newVal = document.getElementById(`new_${i}`).value.trim();
+                if(newVal === "") { hasError = true; document.getElementById(`new_${i}`).classList.add('error-border'); }
+            }
+        }
+    });
+
+    if(hasError) { alert("資料未填寫完整！請檢查紅色標示處。"); return; }
+    if(!hasSigned) { alert("請務必在下方「簽名」確認後才能下載！"); return; }
+    
+    const dept = document.getElementById('empDept').value;
+    const date = document.getElementById('evalDate').value;
+    
+    let rows = "";
+    questions.forEach((q, i) => {
+        const isApp = document.getElementById(`is_app_${i}`).value === "true";
+        if (!isApp) {
+             rows += `<tr class="py-row" data-id="${q.id}"><td>${q.id}</td><td>${q.q}</td><td colspan="5" style="text-align:center;color:#999;">-- 不適用 --</td></tr>`;
+        } else {
+            let checkedTypes = [];
+            document.querySelectorAll(`input[name="v_type_${i}"]:checked`).forEach(cb => { checkedTypes.push(cb.value); });
+            let typeStr = checkedTypes.join("、");
+
+            const p = document.getElementById(`prob_${i}`).value;
+            const s = document.getElementById(`sev_${i}`).value;
+            const sc = document.getElementById(`res_${i}`).getAttribute('data-score');
+            const exist = document.getElementById(`exist_${i}`).value;
+            const newM = document.getElementById(`new_${i}`).value;
+            
+            rows += `<tr class="py-row" data-id="${q.id}">
+                <td>${q.id}</td>
+                <td>${q.q}<br><span style='color:#d35400;font-size:0.8rem;'>[${typeStr}]</span></td>
+                <td>${p}</td><td>${s}</td><td>${sc}</td>
+                <td>${exist}</td><td>${sc>=3 ? newM : '-'}</td>
+            </tr>`;
+        }
+    });
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>評估-${name}</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}td,th{border:1px solid #ccc;padding:8px;}</style></head><body>
+    <div style="text-align:right;font-size:0.8rem;color:#888;">v6.0 (客製讀取+自動分類)</div>
+    <h2>職安風險評估報告</h2>
+    <p>人員：<span id="py-name">${name}</span> | 部門：<span id="py-dept">${dept}</span> | 日期：<span id="py-date">${date}</span></p>
+    <table><thead><tr><th>ID</th><th>項目(類型)</th><th>P</th><th>S</th><th>分</th><th>現有控制</th><th>新增對策</th></tr></thead><tbody>${rows}</tbody></table>
+    <p>簽名：</p><img src="${canvas.toDataURL()}" style="max-height:100px;border-bottom:1px solid #000;">
+    </body></html>`;
+    
+    const blob = new Blob([html], {type: "text/html"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `RiskReport_${dept}_${name}_${date}.html`;
+    link.click();
+    alert("報告已下載！請點選「寄給負責人」按鈕，並手動附加剛剛下載的檔案。");
+}
+
+function sendEmail() {
+    const name = document.getElementById('empName').value;
+    const dept = document.getElementById('empDept').value;
+    const subject = `職安風險評估報告 - ${dept} - ${name}`;
+    const body = `負責人您好，%0D%0A%0D%0A附件為我的職場不法侵害風險評估報告，請查收。%0D%0A%0D%0A評估人員：${name}`;
+    window.location.href = `mailto:${managerEmail}?subject=${subject}&body=${body}`;
+}
+</script>
+</body>
+</html>
